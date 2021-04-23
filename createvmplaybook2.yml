@@ -27,7 +27,7 @@
    vm_NIC: "myNIC"
    vm_Name: "Test01"
 
-   resource_group: "test01-resgrp"
+   resource_group: "Swisscom"
 
    os_user: "azuser"
 
