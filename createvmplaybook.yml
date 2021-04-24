@@ -1,0 +1,201 @@
+- name: Create VM with defaults
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm10
+    admin_username: chouseknecht
+    admin_password: <your password here>
+    image:
+      offer: ubuntu 
+      publisher: OpenLogic
+      sku: '18.04-LTS'
+      version: latest
+
+- name: Create an availability set for managed disk vm
+  azure_rm_availabilityset:
+    name: avs-managed-disk
+    resource_group: Swisscom
+    platform_update_domain_count: 5
+    platform_fault_domain_count: 2
+    sku: Aligned
+
+- name: Create a VM with managed disk
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: vm-managed-disk
+    admin_username: adminUser
+    availability_set: avs-managed-disk
+    managed_disk_type: Standard_LRS
+    image:
+      offer: CoreOS
+      publisher: CoreOS
+      sku: Stable
+      version: latest
+    vm_size: Standard_D4
+
+- name: Create a VM with existing storage account and NIC
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm002
+    vm_size: Standard_D4
+    storage_account: testaccount001
+    admin_username: adminUser
+    ssh_public_keys:
+      - path: /home/adminUser/.ssh/authorized_keys
+        key_data: < insert yor ssh public key here... >
+    network_interfaces: testvm001
+    image:
+      offer: ubuntu 
+      publisher: OpenLogic
+      sku: '18.04'
+      version: latest
+
+- name: Create a VM with OS and multiple data managed disks
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm001
+    vm_size: Standard_D4
+    managed_disk_type: Standard_LRS
+    admin_username: adminUser
+    ssh_public_keys:
+      - path: /home/adminUser/.ssh/authorized_keys
+        key_data: < insert yor ssh public key here... >
+    image:
+      offer: CoreOS
+      publisher: CoreOS
+      sku: Stable
+      version: latest
+    data_disks:
+      - lun: 0
+        managed_disk_id: "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxxxxx/resourceGroups/myResourceGroup/providers/Microsoft.Compute/disks/myDisk"
+      - lun: 1
+        disk_size_gb: 128
+        managed_disk_type: Premium_LRS
+
+- name: Create a VM with OS and multiple data storage accounts
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm001
+    vm_size: Standard_DS1_v2
+    admin_username: adminUser
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/adminUser/.ssh/authorized_keys
+        key_data: < insert yor ssh public key here... >
+    network_interfaces: testvm001
+    storage_container: osdisk
+    storage_blob: osdisk.vhd
+    boot_diagnostics:
+      enabled: yes
+    image:
+      offer: CoreOS
+      publisher: CoreOS
+      sku: Stable
+      version: latest
+    data_disks:
+      - lun: 0
+        disk_size_gb: 64
+        storage_container_name: datadisk1
+        storage_blob_name: datadisk1.vhd
+      - lun: 1
+        disk_size_gb: 128
+        storage_container_name: datadisk2
+        storage_blob_name: datadisk2.vhd
+
+- name: Create a VM with a custom image
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm001
+    vm_size: Standard_DS1_v2
+    admin_username: adminUser
+    admin_password: password01
+    image: customimage001
+
+- name: Create a VM with a custom image from a particular resource group
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm001
+    vm_size: Standard_DS1_v2
+    admin_username: adminUser
+    admin_password: password01
+    image:
+      name: customimage001
+      resource_group: Swisscom
+
+- name: Create a VM with an image id
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm001
+    vm_size: Standard_DS1_v2
+    admin_username: adminUser
+    admin_password: password01
+    image:
+      id: '{{image_id}}'
+
+- name: Create VM with spcified OS disk size
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: big-os-disk
+    admin_username: chouseknecht
+    admin_password: <your password here>
+    os_disk_size_gb: 512
+    image:
+      offer: ubuntu 
+      publisher: OpenLogic
+      sku: '18.04'
+      version: latest
+
+- name: Create VM with OS and Plan, accepting the terms
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: f5-nva
+    admin_username: chouseknecht
+    admin_password: <your password here>
+    image:
+      publisher: f5-networks
+      offer: f5-big-ip-best
+      sku: f5-bigip-virtual-edition-200m-best-hourly
+      version: latest
+    plan:
+      name: f5-bigip-virtual-edition-200m-best-hourly
+      product: f5-big-ip-best
+      publisher: f5-networks
+
+- name: Power Off
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm002
+    started: no
+
+- name: Deallocate
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm002
+    allocated: no
+
+- name: Power On
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm002
+
+- name: Restart
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm002
+    restarted: yes
+
+- name: Create a VM with an Availability Zone
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm001
+    vm_size: Standard_DS1_v2
+    admin_username: adminUser
+    admin_password: password01
+    image: customimage001
+    zones: [1]
+
+- name: Remove a VM and all resources that were autocreated
+  azure_rm_virtualmachine:
+    resource_group: Swisscom
+    name: testvm002
+    remove_on_absent: all_autocreated
+    state: absent
