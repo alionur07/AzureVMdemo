@@ -14,7 +14,7 @@ provider "azurerm" {
 # Create a resource group if it doesn't exist
 resource "azurerm_resource_group" "swisscomgroup" {
     name     = "Swisscom"
-    location = "eastus"
+    location = var.locationVM1
 
     tags = {
         environment = "Swisscom Terraform Case"
