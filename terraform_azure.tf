@@ -52,9 +52,7 @@ resource "azurerm_public_ip" "swisscompublicip" {
         environment = "Swisscom Terraform Case"
     }
 }
-output "public_ip_address" {
-    value = azurerm_public_ip.swisscompublicip.ip_address
-}
+
 
 # Create Network Security Group and rule
 resource "azurerm_network_security_group" "swisscomnsg" {
@@ -70,6 +68,20 @@ resource "azurerm_network_security_group" "swisscomnsg" {
         protocol                   = "Tcp"
         source_port_range          = "*"
         destination_port_range     = "22"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+
+        
+    }
+
+    security_rule {
+        name                       = "HTTP-80"
+        priority                   = 1002
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "80"
         source_address_prefix      = "*"
         destination_address_prefix = "*"
     }
@@ -202,4 +214,9 @@ provisioner "file" {
     host     = azurerm_linux_virtual_machine.swisscomvm.public_ip_address
   }
 
+
+}
+
+output "public_ip_address" {
+    value = azurerm_linux_virtual_machine.swisscomvm.public_ip_address
 }
