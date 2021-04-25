@@ -153,15 +153,22 @@ resource "azurerm_linux_virtual_machine" "swisscomvm" {
         sku       = "18.04-LTS"
         version   = "latest"
     }
-
-    computer_name  = "SwisscomCaseStudyVm"
-    admin_username = "swisscom"
-    disable_password_authentication = false
-
-    admin_ssh_key {
-        username       = "swisscom"
-        public_key     = tls_private_key.ubuntu_ssh.public_key_openssh
+    
+    os_profile {
+    computer_name_prefix = "SwisscomCaseStudyVm"
+    admin_username       = "swisscom"
+    admin_password       = "swisscom"
     }
+
+    os_profile_linux_config {
+    disable_password_authentication = true
+
+    ssh_keys {
+      path     = "/home/swisscom/.ssh/authorized_keys"
+      key_data = file("~/.ssh/id_rsa.pub")
+    }
+   } 
+
 
 #    output "admin_ssh_key" {
 #     value = tls_private_key.ubuntu_ssh.public_key_openssh

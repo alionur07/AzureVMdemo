@@ -2,7 +2,7 @@
 provider "azurerm" {
     # The "feature" block is required for AzureRM provider 2.x. 
     # If you're using version 1.x, the "features" block is not allowed.
-    version = "~>2.0"
+    version = "=2.56.0"
     features {}
     
     subscription_id = "a964a032-7bc2-4b94-a32b-84812b3077fd"
@@ -52,6 +52,9 @@ resource "azurerm_public_ip" "swisscompublicip" {
         environment = "Swisscom Terraform Case"
     }
 }
+output "public_ip_address" {
+    value = azurerm_public_ip.swisscompublicip.ip_address
+}
 
 # Create Network Security Group and rule
 resource "azurerm_network_security_group" "swisscomnsg" {
@@ -77,7 +80,7 @@ resource "azurerm_network_security_group" "swisscomnsg" {
 }
 
 # Create network interface
-resource "azurerm_network_interface" "swisscomnic" {
+resource  "azurerm_network_interface" "swisscomnic" {
     name                      = "swisscomNIC"
     location                  = "eastus"
     resource_group_name       = azurerm_resource_group.swisscomgroup.name
@@ -92,6 +95,7 @@ resource "azurerm_network_interface" "swisscomnic" {
     tags = {
         environment = "Swisscom Terraform Case"
     }
+
 }
 
 # Connect the security group to the network interface
@@ -124,7 +128,8 @@ resource "azurerm_storage_account" "swisscomstorageaccount" {
 }
 
 # Create (and display) an SSH key
-resource "tls_private_key" "ubuntu_ssh" {
+/*
+  resource "tls_private_key" "ubuntu_ssh" {
   algorithm = "RSA"
   rsa_bits = 4096
 }
@@ -132,7 +137,7 @@ output "tls_private_key" {
      value = tls_private_key.ubuntu_ssh.private_key_pem 
      sensitive = true
      }
-
+*/
 # Create virtual machine
 resource "azurerm_linux_virtual_machine" "swisscomvm" {
     name                  = "CaseUbuntuVM"
@@ -153,20 +158,20 @@ resource "azurerm_linux_virtual_machine" "swisscomvm" {
         sku       = "18.04-LTS"
         version   = "latest"
     }
-
-    computer_name  = "SwisscomCaseStudyVm"
-    admin_username = "swisscom"
-    disable_password_authentication = false
+   
+    
+        computer_name  = "SwisscomCaseStudyVm"
+        admin_username = "swisscom"
+        admin_password = "Swisscom!"
+        disable_password_authentication = false
+    
 
     admin_ssh_key {
         username       = "swisscom"
-        public_key     = tls_private_key.ubuntu_ssh.public_key_openssh
+       # public_key     = tls_private_key.ubuntu_ssh.public_key_openssh
+        public_key     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCnmzyNA46/zouIrCZ4JgOEK2nc5UEq/eHz82KE13EbBbI5+boNN+5COwhGp8zqr52/XOwpF0pFiEBJ251Ftr5jnQC3II+XYqg1W0brIItzQHROj/fxC2f2RbJkVhmE2oOuUAgdG+fa9uQNpCgyjGsY1Lm1aJrucdHgB5MIKqPNQe663U5sgYC3QsWudbZeXP/w9sjFcR4zjfKJiVeVoR8huout0ytVOGr8i6ukwPyo+HAk0DU/VlDDtxJOUYXIlyqQGt2aJ6nrJUiwcmOqTeZlDTmgDhkx3UcMhsYAyFYQ9RuK+8ATupc/fNaJf3BwoYJiBGmHAPRDrRNwfhOsTORX ali@ubuntuJobAgent"
+       # private_key    = "~/.ssh/id_rsa"
     }
-
-#    output "admin_ssh_key" {
-#     value = tls_private_key.ubuntu_ssh.public_key_openssh
-     
-#    }
 
     boot_diagnostics {
         storage_account_uri = azurerm_storage_account.swisscomstorageaccount.primary_blob_endpoint
@@ -175,4 +180,26 @@ resource "azurerm_linux_virtual_machine" "swisscomvm" {
     tags = {
         environment = "Swisscom Terraform Case"
     }
+
+provisioner "file" {
+    source      = "dockerinstallandrun.sh"
+    destination = "/tmp/dockerinstallandrun.sh"
+  }
+
+
+ # Change permissions on bash script and execute from ec2-user.
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/dockerinstallandrun.sh",
+      "sudo /tmp/dockerinstallandrun.sh",
+    ]
+  }
+
+    connection {
+    type     = "ssh"
+    user     = "swisscom"
+    password = "Swisscom!"
+    host     = azurerm_linux_virtual_machine.swisscomvm.public_ip_address
+  }
+
 }
