@@ -25,7 +25,7 @@ resource "azurerm_resource_group" "swisscomgroup" {
 resource "azurerm_virtual_network" "swisscomnetwork" {
     name                = "SwisscomVnet"
     address_space       = ["10.0.0.0/16"]
-    location            = "eastus"
+    location            = var.locationVM1
     resource_group_name = azurerm_resource_group.swisscomgroup.name
 
     tags = {
@@ -44,7 +44,7 @@ resource "azurerm_subnet" "swisscomsubnet" {
 # Create public IPs
 resource "azurerm_public_ip" "swisscompublicip" {
     name                         = "swisscomPublicIP"
-    location                     = "eastus"
+    location                     = var.locationVM1
     resource_group_name          = azurerm_resource_group.swisscomgroup.name
     allocation_method            = "Dynamic"
 
@@ -57,7 +57,7 @@ resource "azurerm_public_ip" "swisscompublicip" {
 # Create Network Security Group and rule
 resource "azurerm_network_security_group" "swisscomnsg" {
     name                = "swisscomSecurityGroup"
-    location            = "eastus"
+    location            = var.locationVM1
     resource_group_name = azurerm_resource_group.swisscomgroup.name
 
     security_rule {
@@ -94,7 +94,7 @@ resource "azurerm_network_security_group" "swisscomnsg" {
 # Create network interface
 resource  "azurerm_network_interface" "swisscomnic" {
     name                      = "swisscomNIC"
-    location                  = "eastus"
+    location                  = var.locationVM1
     resource_group_name       = azurerm_resource_group.swisscomgroup.name
 
     ip_configuration {
@@ -130,7 +130,7 @@ resource "random_id" "randomId" {
 resource "azurerm_storage_account" "swisscomstorageaccount" {
     name                        = "diag${random_id.randomId.hex}"
     resource_group_name         = azurerm_resource_group.swisscomgroup.name
-    location                    = "eastus"
+    location                    = var.locationVM1
     account_tier                = "Standard"
     account_replication_type    = "LRS"
 
@@ -153,7 +153,7 @@ output "tls_private_key" {
 # Create virtual machine
 resource "azurerm_linux_virtual_machine" "swisscomvm" {
     name                  = "CaseUbuntuVM"
-    location              = "eastus"
+    location              = var.locationVM1
     resource_group_name   = azurerm_resource_group.swisscomgroup.name
     network_interface_ids = [azurerm_network_interface.swisscomnic.id]
     size                  = "Standard_DS1_v2"
